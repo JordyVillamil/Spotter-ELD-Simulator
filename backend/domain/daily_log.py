@@ -3,6 +3,7 @@ from datetime import date
 from typing import List
 from .trip_event import TripEvent
 
+
 @dataclass
 class DailyLog:
     date: date

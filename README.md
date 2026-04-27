@@ -68,6 +68,9 @@ backend/
 ## Commits
 - Agregar commits claros para cada sprint y funcionalidad clave.
 
+unit tests for FMCA rules
+
 ---
 
 For more details, see PROJECT_CONTEXT.md.
+
