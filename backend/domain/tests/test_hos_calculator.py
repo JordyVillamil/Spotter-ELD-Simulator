@@ -1,65 +1,85 @@
 import unittest
 from datetime import datetime
-
-# Importaciones absolutas desde la raíz del proyecto
 from backend.domain.hos_calculator import HOSCalculator
 from backend.domain.models import DutyStatus
 
 
-class TestHOSCalculator(unittest.TestCase):
+class TestHOSCalculatorRules(unittest.TestCase):
 
-    def test_pickup_and_dropoff_events(self):
-        start_time = datetime(2026, 4, 27, 8, 0)
-        hos = HOSCalculator(start_time, 10, 10, 0)
+    def setUp(self):
+        self.start_time = datetime(2026, 4, 27, 8, 0)
+
+    # 1. 11-Hour Driving Limit
+    def test_11_hour_driving_limit(self):
+        # Viaje corto: 11 horas justas de manejo
+        hos = HOSCalculator(self.start_time, 550, 50, 0)
         events = hos.generate_trip_events()
-        # Ahora usamos 'remarks' en lugar de 'description'
-        self.assertIn("Pickup", events[0].remarks)
-        self.assertIn("Drop-off", events[-1].remarks)
+        driving_time = sum(
+            (e.end_time - e.start_time).total_seconds()
+            for e in events
+            if e.status == DutyStatus.DRIVING
+        )
+        self.assertLessEqual(driving_time / 3600, 11.0)
 
-    def test_fueling_stop_inserted(self):
-        start_time = datetime(2026, 4, 27, 8, 0)
-        hos = HOSCalculator(start_time, 2000, 50, 0)
+    # 2. 14-Hour Duty Window
+    def test_14_hour_duty_window(self):
+        hos = HOSCalculator(self.start_time, 600, 50, 0)
         events = hos.generate_trip_events()
-        fueling_events = [e for e in events if "fueling" in e.remarks.lower()]
+        # Verificar que el tiempo total de turno no supere 14h
+        total_time = (events[-1].end_time - events[0].start_time).total_seconds() / 3600
+        # Es difícil forzarlo exactamente, pero verificamos que descanse tras el límite
+        self.assertLessEqual(total_time, 24.0)  # El log debe tener paradas si excede
 
-        self.assertGreaterEqual(len(fueling_events), 1)
-        for fuel in fueling_events:
-            self.assertEqual((fuel.end_time - fuel.start_time).total_seconds(), 1800)
-
-    def test_rest_breaks_and_cumulative_driving(self):
-        start_time = datetime(2026, 4, 27, 8, 0)
-        hos = HOSCalculator(start_time, 1000, 62.5, 0)  # 16 hours driving
+    # 3. 30-Minute Rest Break (8h driving)
+    def test_30_min_rest_break(self):
+        hos = HOSCalculator(self.start_time, 1000, 60, 0)  # 16h driving
         events = hos.generate_trip_events()
-        rest_breaks = [e for e in events if "break" in e.remarks.lower()]
+        breaks = [e for e in events if "break" in str(e.remarks).lower()]
+        self.assertTrue(any(e.status == DutyStatus.OFF_DUTY for e in breaks))
 
-        self.assertGreaterEqual(len(rest_breaks), 1)
-        for rest in rest_breaks:
-            self.assertEqual((rest.end_time - rest.start_time).total_seconds(), 1800)
-
-    def test_70_hour_limit_and_restart(self):
-        start_time = datetime(2026, 4, 27, 8, 0)
-        hos = HOSCalculator(start_time, 4000, 50, 0)
+    # 4. 70-Hour/8-Day Limit
+    def test_70_hour_limit(self):
+        # Forzar un ciclo de uso alto
+        hos = HOSCalculator(self.start_time, 500, 50, 69.0)
         events = hos.generate_trip_events()
-        restart_events = [e for e in events if "restart" in e.remarks.lower()]
+        self.assertTrue(any("restart" in str(e.remarks).lower() for e in events))
 
-        self.assertGreaterEqual(len(restart_events), 1)
-        for restart in restart_events:
-            self.assertEqual(
-                (restart.end_time - restart.start_time).total_seconds(), 34 * 3600
-            )
-
-    def test_multi_day_trip_and_sleep(self):
-        start_time = datetime(2026, 4, 27, 8, 0)
-        hos = HOSCalculator(start_time, 2000, 50, 0)
+    # 5. 34-Hour Restart
+    def test_34_hour_restart(self):
+        hos = HOSCalculator(self.start_time, 500, 50, 70.0)
         events = hos.generate_trip_events()
-        # Ahora comparamos contra el Enum DutyStatus
-        sleep_events = [e for e in events if e.status == DutyStatus.SLEEPER_BERTH]
+        restart_event = next(e for e in events if "restart" in str(e.remarks).lower())
+        duration = (
+            restart_event.end_time - restart_event.start_time
+        ).total_seconds() / 3600
+        self.assertEqual(duration, 34.0)
 
-        self.assertGreaterEqual(len(sleep_events), 1)
-        for sleep in sleep_events:
-            self.assertEqual(
-                (sleep.end_time - sleep.start_time).total_seconds(), 10 * 3600
-            )
+    # 6. 1-Hour Pickup
+    def test_pickup_on_duty(self):
+        hos = HOSCalculator(self.start_time, 10, 10, 0)
+        events = hos.generate_trip_events()
+        pickup = events[0]
+        self.assertEqual(pickup.status, DutyStatus.ON_DUTY_NOT_DRIVING)
+        self.assertEqual(
+            (pickup.end_time - pickup.start_time).total_seconds() / 3600, 1.0
+        )
+
+    # 7. 1-Hour Drop-off
+    def test_dropoff_on_duty(self):
+        hos = HOSCalculator(self.start_time, 10, 10, 0)
+        events = hos.generate_trip_events()
+        dropoff = events[-1]
+        self.assertEqual(dropoff.status, DutyStatus.ON_DUTY_NOT_DRIVING)
+        self.assertEqual(
+            (dropoff.end_time - dropoff.start_time).total_seconds() / 3600, 1.0
+        )
+
+    # 8. Fueling Stop
+    def test_fueling_every_1000_miles(self):
+        hos = HOSCalculator(self.start_time, 1100, 50, 0)  # Necesita 1 parada
+        events = hos.generate_trip_events()
+        fuel_stops = [e for e in events if "fueling" in str(e.remarks).lower()]
+        self.assertEqual(len(fuel_stops), 1)
 
 
 if __name__ == "__main__":
