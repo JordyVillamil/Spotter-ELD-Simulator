@@ -48,6 +48,7 @@ function App() {
               )}
             </div>
             
+            
             <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 min-h-[300px]">
               <h2 className="text-xl font-bold mb-4 text-gray-800">Electronic Logs (ELD)</h2>
               {logs.length > 0 ? (
