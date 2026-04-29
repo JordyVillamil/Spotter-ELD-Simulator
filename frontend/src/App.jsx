@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import RouteForm from './components/RouteForm';
 import { calculateELD } from './services/api';
+import MapDisplay from './components/MapDisplay';
 
 function App() {
   const [logs, setLogs] = useState([]);
@@ -34,8 +35,17 @@ function App() {
           </div>
 
           <div className="space-y-6 lg:col-span-2">
-            <div className="bg-white p-6 rounded-xl shadow-lg h-96 flex items-center justify-center border border-gray-200">
-              {loading ? <p className="animate-pulse">Calculating Route...</p> : <p className="text-gray-400 font-medium">Map View (Leaflet Implementation)</p>}
+            <div className="bg-white p-2 rounded-xl shadow-lg h-96 border border-gray-200 overflow-hidden">
+              {loading ? (
+                <div className="h-full w-full flex items-center justify-center bg-gray-50">
+                   <p className="animate-pulse text-blue-600 font-semibold">Fetching Route Data...</p>
+                </div>
+              ) : (
+                <MapDisplay 
+                   origin="Miami, FL" 
+                   destination="New York, NY" 
+                />
+              )}
             </div>
             
             <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 min-h-[300px]">
