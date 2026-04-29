@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import RouteForm from './components/RouteForm';
 import { calculateELD } from './services/api';
 import MapDisplay from './components/MapDisplay';
+import ELDChart from './components/ELDChart';
 
 function App() {
   const [logs, setLogs] = useState([]);
@@ -48,6 +49,17 @@ function App() {
               )}
             </div>
             
+            {/* Gráfico ELD (Logbook) */}
+            <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+              <h2 className="text-xl font-bold mb-4 text-gray-800">24-Hour Logbook Grid</h2>
+              {logs.length > 0 ? (
+                <ELDChart logs={logs} />
+              ) : (
+                <div className="h-48 flex items-center justify-center bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                  <p className="text-gray-400">Genera una ruta para visualizar el gráfico ELD</p>
+                </div>
+              )}
+            </div>
             
             <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 min-h-[300px]">
               <h2 className="text-xl font-bold mb-4 text-gray-800">Electronic Logs (ELD)</h2>

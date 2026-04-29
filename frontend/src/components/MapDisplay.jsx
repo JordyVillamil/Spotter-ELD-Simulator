@@ -38,6 +38,7 @@ const MapDisplay = ({ origin, destination }) => {
         center={miamiCoords} 
         zoom={4} 
         scrollWheelZoom={true}
+        style={{ height: "400px", width: "100%", zIndex: 0 }}
         className="h-full w-full"
       >
         <TileLayer
