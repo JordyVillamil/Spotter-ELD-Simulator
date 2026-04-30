@@ -135,3 +135,20 @@ Hora 3: Grabación del video de Loom. Explica tu decisión de usar Arquitectura 
 Hora 4: Documentación final en el README.md y envío del correo.
 
 agregar commits a cada uno de los sprints
+
+## Development Sprints
+### Sprint 1: El Corazón del Sistema (4 horas)
+- Lógica matemática FMCSA funcionando perfectamente
+- Dominio puro Python, algoritmo HOSCalculator, pruebas unitarias
+
+### Sprint 2: Infraestructura y Datos (4 horas)
+- Adaptador API de mapas, casos de uso, endpoint DRF, validación de flujo
+
+### Sprint 3: Visualización e Interfaz (4 horas)
+- React UI, Leaflet mapa, LogGrid componente
+
+### Sprint 4: Pulido, Despliegue y Demo (4 horas)
+- UI/UX, despliegue, documentación, demo
+
+"http://localhost:5173",  # Vite
+    "http://localhost:3000",  # Create React App

@@ -1,76 +1,82 @@
 # Spotter ELD Simulator (HOS & Routing)
 
-## Project Objective
-Develop a Full-Stack application (Django + React) that plans freight truck routes and automatically generates Electronic Logging Device (ELD) logs based on the FMCSA Hours of Service (HOS) regulations for property-carrying drivers.
+## 📌 Project Objective
+A Full-Stack application designed to plan freight truck routes and automatically generate Electronic Logging Device (ELD) logs. This simulator strictly adheres to the FMCSA Hours of Service (HOS) regulations for property-carrying drivers, demonstrating complex domain logic isolated within a modern web framework.
 
-## Tech Stack
-- **Backend:** Django + Django REST Framework (DRF)
-- **Frontend:** React + Tailwind CSS
-- **Maps:** Free routing API (OpenRouteService or Mapbox) + Leaflet for rendering
-- **Deployment:** Vercel (Frontend), Render/Railway (Backend)
-
-## Business Rules (FMCSA - Property-Carrying Regulations)
-- **11-Hour Driving Limit:** Max 11 hours driving after 10 consecutive hours off duty.
-- **14-Hour Driving Window:** No driving beyond the 14th consecutive hour after coming on duty (non-driving "On Duty" tasks allowed after 14 hours).
-- **30-Minute Rest Break:** 30-minute consecutive break after 8 cumulative hours of driving (can be "On Duty (Not Driving)").
-- **70-Hour/8-Day Limit:** No driving after 70 hours on duty in any 8 consecutive days.
-- **34-Hour Restart:** 34 consecutive hours "Off Duty" or in "Sleeper Berth" resets the 70-hour cycle.
-
-### Assessment Assumptions
-- 1 hour fixed "On Duty (Not Driving)" at Pickup and Drop-off locations.
-- At least one 30-minute "On Duty (Not Driving)" fueling stop every 1,000 miles.
-- No adverse driving conditions.
-
-## Required Inputs
-- `current_location`: Driver's starting point
-- `pickup_location`: Where the load is picked up
-- `dropoff_location`: Where the load is delivered
-- `current_cycle_used`: Hours already consumed in the current 70-hour cycle
-
-## Required Outputs
-- **Interactive Map:** Calculated route and pinpointed stops (rests, sleep, fueling)
-- **Digital Daily Logs:** 24-hour Graph Grid for each day, mapped to 4 duty statuses:
-  - Off Duty
-  - Sleeper Berth
-  - Driving
-  - On Duty (not driving)
-
-## Architecture (Hexagonal / Ports and Adapters)
-- **Domain Layer:** Pure Python entities and FMCSA (HOS) rules (no Django/ORM/external APIs)
-- **Application Layer (Ports):** Use Cases and interfaces (e.g., GenerateRouteAndLogsUseCase)
-- **Infrastructure Layer (Adapters):**
-  - Driving Adapters: DRF views/urls
-  - Driven Adapters: Routing API implementations
-
-### Suggested Folder Structure
-```
-backend/
-├── domain/               # Pure Python entities and FMCSA (HOS) rules
-├── application/          # Use cases and interfaces (Ports)
-├── infrastructure/       # Adapters (Routing APIs, DRF Views)
-└── spotter_api/          # Core Django configuration (settings.py)
-```
-
-## Development Sprints
-### Sprint 1: El Corazón del Sistema (4 horas)
-- Lógica matemática FMCSA funcionando perfectamente
-- Dominio puro Python, algoritmo HOSCalculator, pruebas unitarias
-
-### Sprint 2: Infraestructura y Datos (4 horas)
-- Adaptador API de mapas, casos de uso, endpoint DRF, validación de flujo
-
-### Sprint 3: Visualización e Interfaz (4 horas)
-- React UI, Leaflet mapa, LogGrid componente
-
-### Sprint 4: Pulido, Despliegue y Demo (4 horas)
-- UI/UX, despliegue, documentación, demo
-
-## Commits
-- Agregar commits claros para cada sprint y funcionalidad clave.
-
-unit tests for FMCA rules
+## 🛠️ Tech Stack
+- **Backend:** Python, Django, Django REST Framework (DRF)
+- **Frontend:** React, Vite, Tailwind CSS v4
+- **Mapping & Visualization:** Leaflet (react-leaflet), Custom React Gantt Chart
+- **Architecture:** Hexagonal Architecture (Ports and Adapters)
 
 ---
 
-For more details, see PROJECT_CONTEXT.md.
+## 🚀 Getting Started (Local Development)
 
+The project is divided into a Django backend and a React frontend. You will need two terminal instances to run the application.
+
+### 1. Backend Setup (Terminal 1)
+Make sure you are in the root directory of the project.
+
+```bash
+# Create and activate the virtual environment
+python -m venv venv
+.\venv\Scripts\activate  # On Windows
+# source venv/bin/activate # On Mac/Linux
+
+# Install dependencies
+pip install django djangorestframework django-cors-headers requests python-dotenv
+
+# Run database migrations (Required for Django's core)
+python manage.py migrate
+
+# Start the development server
+python manage.py runserver
+
+# The backend API will run on http://127.0.0.1:8000/
+```
+
+## 2. Frontend Setup (Terminal 2)
+
+Open a new terminal and navigate to the frontend folder.
+
+```bash
+# Enter the frontend directory
+cd frontend
+
+# Install Node dependencies
+npm install
+
+# Start the Vite development server
+npm run dev
+```
+
+The React application will be available at http://localhost:5173/
+
+## 🏗️ Architecture Design (Hexagonal)
+
+This project implements a Hexagonal Architecture (Ports and Adapters) to decouple the core 
+FMCSA business rules from the Django framework.
+
+```
+backend/
+├── domain/           # Pure Python: HOS rules, Entities, and logic (Zero Django dependencies)
+├── application/      # Ports: Use cases orchestrating the flow of data
+├── infrastructure/   # Adapters: DRF Views, URLs, and external map API integrations
+spotter_api/          # Core Django configuration
+```
+
+Benefits: The HOS calculation engine can be unit-tested instantly without a database, and the framework (Django) or the UI (React) can be replaced without touching the business logic.
+
+## ⚖️ Business Rules Implemented (FMCSA)
+- **11-Hour Driving Limit:** Max 11 hours driving after 10 consecutive hours off duty.
+- **14-Hour Driving Window:** No driving beyond the 14th consecutive hour after coming on duty.
+- **30-Minute Rest Break:** 30-minute consecutive break required after 8 cumulative hours of driving.
+- **10-Hour Reset:** 10 consecutive hours of Sleeper Berth / Off Duty to reset driving hours.
+- **Simulation Assumptions:** 1-hour fixed On-Duty time at Pickup/Drop-off, and a mandatory 30-min fueling stop every 1,000 miles.
+
+## 📊 Features
+- **Route Planner:** Input current, pickup, and drop-off locations.
+- **Interactive Map:** Visualizes the calculated route using Leaflet.
+- **ELD 24-Hour Logbook:** A dynamic, color-coded Gantt chart displaying the driver's duty status (Off Duty, Sleeper Berth, Driving, On Duty) over time.
+- **Detailed Log Table:** Step-by-step breakdown of timestamps, locations, and status remarks.
