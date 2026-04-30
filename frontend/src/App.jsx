@@ -5,15 +5,32 @@ import MapDisplay from './components/MapDisplay';
 import ELDChart from './components/ELDChart';
 
 function App() {
+  // Estado original para los eventos de la gráfica
   const [logs, setLogs] = useState([]);
+  
+  // NUEVO: Estado para guardar los datos de la ruta para el mapa
+  const [mapData, setMapData] = useState(null);
+  // NUEVO: Estado para guardar las ciudades que escribió el usuario
+  const [searchedCities, setSearchedCities] = useState(null);
+  
   const [loading, setLoading] = useState(false);
 
   const handleCalculate = async (data) => {
     setLoading(true);
+    setSearchedCities(data); // Guardamos lo que se escribió en el formulario
+    
     try {
       const result = await calculateELD(data);
-      setLogs(result);
-      console.log("Logs recibidos:", result);
+      
+      // Extraemos la información separada que ahora nos manda Django
+      if (result.events && result.map_data) {
+        setLogs(result.events);         // La gráfica recibe solo la lista de eventos
+        setMapData(result.map_data);    // El mapa recibe solo las coordenadas
+      } else {
+        setLogs(result); // Fallback de seguridad
+      }
+      
+      console.log("Respuesta recibida:", result);
     } catch (error) {
       alert("Error al conectar con el servidor. ¿Está encendido Django?");
     } finally {
@@ -43,9 +60,9 @@ function App() {
                 </div>
               ) : (
                 <MapDisplay 
-                   origin={formData.current_location || "Miami, FL"} 
-                   destination={formData.dropoff_location || "New York, NY"} 
-                   mapData={apiResponseData.map_data}
+                   origin={searchedCities ? searchedCities.current_location : "Miami, FL"} 
+                   destination={searchedCities ? searchedCities.dropoff_location : "New York, NY"} 
+                   mapData={mapData}
                 />
               )}
             </div>
