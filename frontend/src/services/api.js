@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://spotter-eld-simulator-1-7y7z.vercel.app//api/v1';
+const API_BASE_URL = 'https://spotter-eld-simulator-1-7y7z.vercel.app/api/v1';
 
 export const calculateELD = async (data) => {
   try {
