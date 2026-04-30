@@ -3,7 +3,6 @@ import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// Fix para los iconos de Leaflet en React/Vite
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
@@ -15,27 +14,33 @@ let DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// Componente para re-centrar el mapa cuando cambian los datos
-function ChangeView({ center }) {
+// Componente súper profesional que ajusta el zoom a la ruta dinámicamente
+function RouteFitter({ routePath }) {
   const map = useMap();
-  map.setView(center, map.getZoom());
+  useEffect(() => {
+    if (routePath && routePath.length > 0) {
+      const bounds = L.latLngBounds(routePath);
+      map.fitBounds(bounds, { padding: [50, 50] });
+    }
+  }, [routePath, map]);
   return null;
 }
 
-const MapDisplay = ({ origin, destination }) => {
-  // Coordenadas por defecto (Centro de EE. UU. si no hay datos)
+const MapDisplay = ({ origin, destination, mapData }) => {
+  // Coordenadas por defecto (Centro de EE. UU.)
   const defaultCenter = [39.8283, -98.5795];
   
-  // En una prueba técnica real, usarías coordenadas devueltas por el backend.
-  // Por ahora, usaremos coordenadas estáticas para Miami y NY para visualizar la ruta.
-  const miamiCoords = [25.7617, -80.1918];
-  const nyCoords = [40.7128, -74.0060];
-  const routePath = [miamiCoords, nyCoords];
+  // Extraemos los datos dinámicos si existen
+  const originCoords = mapData?.origin_coords || [25.7617, -80.1918];
+  const destCoords = mapData?.destination_coords || [40.7128, -74.0060];
+  const routePath = mapData?.route_path && mapData.route_path.length > 0 
+                    ? mapData.route_path 
+                    : [originCoords, destCoords];
 
   return (
     <div className="h-full w-full rounded-xl overflow-hidden shadow-inner">
       <MapContainer 
-        center={miamiCoords} 
+        center={originCoords} 
         zoom={4} 
         scrollWheelZoom={true}
         style={{ height: "400px", width: "100%", zIndex: 0 }}
@@ -46,18 +51,18 @@ const MapDisplay = ({ origin, destination }) => {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         
-        <ChangeView center={miamiCoords} />
+        <RouteFitter routePath={routePath} />
 
-        <Marker position={miamiCoords}>
+        <Marker position={originCoords}>
           <Popup>Origin: {origin}</Popup>
         </Marker>
 
-        <Marker position={nyCoords}>
+        <Marker position={destCoords}>
           <Popup>Destination: {destination}</Popup>
         </Marker>
 
-        {/* Línea que conecta los puntos */}
-        <Polyline positions={routePath} color="blue" weight={3} opacity={0.7} dashArray="10, 10" />
+        {/* Línea dinámica real dibujando las curvas de la carretera */}
+        <Polyline positions={routePath} color="#2563eb" weight={4} opacity={0.8} />
       </MapContainer>
     </div>
   );

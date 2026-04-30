@@ -43,8 +43,9 @@ function App() {
                 </div>
               ) : (
                 <MapDisplay 
-                   origin="Miami, FL" 
-                   destination="New York, NY" 
+                   origin={formData.current_location || "Miami, FL"} 
+                   destination={formData.dropoff_location || "New York, NY"} 
+                   mapData={apiResponseData.map_data}
                 />
               )}
             </div>
