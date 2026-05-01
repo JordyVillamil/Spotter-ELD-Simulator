@@ -25,14 +25,14 @@ def get_coordinates(city_name):
 
 
 def get_route_path(lat1, lon1, lat2, lon2):
-    url = f"http://router.project-osrm.org/route/v1/driving/{lon1},{lat1};{lon2},{lat2}?overview=full&geometries=geojson"
+    url = f"https://router.project-osrm.org/route/v1/driving/{lon1},{lat1};{lon2},{lat2}?overview=full&geometries=geojson"
     try:
-        response = requests.get(url).json()
+        response = requests.get(url, timeout=10).json()
         if response.get("code") == "Ok":
             geometry = response["routes"][0]["geometry"]["coordinates"]
             return [[coord[1], coord[0]] for coord in geometry]
-    except:
-        pass
+    except Exception as e:
+        print(f"OSRM error: {e}")
     return []
 
 
