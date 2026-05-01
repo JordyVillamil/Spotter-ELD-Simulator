@@ -10,7 +10,12 @@ const RouteForm = ({ onCalculate }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onCalculate(formData);
+    // Si el usuario lo dejó vacío al enviar, lo tomamos como 0 por seguridad
+    const dataToSend = {
+      ...formData,
+      current_cycle_used: formData.current_cycle_used === '' ? 0 : formData.current_cycle_used
+    };
+    onCalculate(dataToSend);
   };
 
   return (
@@ -28,7 +33,7 @@ const RouteForm = ({ onCalculate }) => {
         <label className="block text-sm font-medium text-gray-700">Pickup Location</label>
         <input 
           type="text" 
-          className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm"
+          className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500"
           value={formData.pickup_location}
           onChange={(e) => setFormData({...formData, pickup_location: e.target.value})}
         />
@@ -37,7 +42,7 @@ const RouteForm = ({ onCalculate }) => {
         <label className="block text-sm font-medium text-gray-700">Drop-off Location</label>
         <input 
           type="text" 
-          className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm"
+          className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500"
           value={formData.dropoff_location}
           onChange={(e) => setFormData({...formData, dropoff_location: e.target.value})}
         />
@@ -46,9 +51,13 @@ const RouteForm = ({ onCalculate }) => {
         <label className="block text-sm font-medium text-gray-700">Cycle Hours Used (70h limit)</label>
         <input 
           type="number" 
-          className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm"
+          className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500"
           value={formData.current_cycle_used}
-          onChange={(e) => setFormData({...formData, current_cycle_used: parseFloat(e.target.value)})}
+          // AQUÍ ESTÁ LA MAGIA: Operador ternario para evitar el NaN
+          onChange={(e) => setFormData({
+            ...formData, 
+            current_cycle_used: e.target.value === '' ? '' : parseFloat(e.target.value)
+          })}
         />
       </div>
       <button 
